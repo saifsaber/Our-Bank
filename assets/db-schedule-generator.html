@@ -1,0 +1,811 @@
+<title>Distribution Board Schedule Generator</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F2F4F6; --card:#FFFFFF; --sunk:#E7EBEF; --ink:#161A1F; --ink-2:#4A535D;
+  --ink-3:#78838F; --rule:#D3DAE1; --rule-2:#C0C9D2;
+  --copper:#B3652F; --copper-soft:#F3E3D8; --copper-ink:#8C4E22;
+  --ok:#2C7A53; --ok-bg:#DFF0E7; --warn:#9C6A12; --warn-bg:#FAEDD3; --bad:#B32C2C; --bad-bg:#F7DEDE;
+  --l1:#8B5E3C; --l2:#31373E; --l3:#8A9199;
+  --shadow:0 1px 2px rgba(20,28,38,.06),0 8px 24px -12px rgba(20,28,38,.18);
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#101418; --card:#181D23; --sunk:#0B0E12; --ink:#E9EDF1; --ink-2:#A7B2BD;
+    --ink-3:#7B8794; --rule:#2A323A; --rule-2:#3A444E;
+    --copper:#D98A4F; --copper-soft:#3A2717; --copper-ink:#E9A870;
+    --ok:#5FBF8C; --ok-bg:#16301F; --warn:#D8A13F; --warn-bg:#332612; --bad:#E5736F; --bad-bg:#38191A;
+    --l1:#B8845C; --l2:#9AA4AE; --l3:#6E7882;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101418; --card:#181D23; --sunk:#0B0E12; --ink:#E9EDF1; --ink-2:#A7B2BD;
+  --ink-3:#7B8794; --rule:#2A323A; --rule-2:#3A444E;
+  --copper:#D98A4F; --copper-soft:#3A2717; --copper-ink:#E9A870;
+  --ok:#5FBF8C; --ok-bg:#16301F; --warn:#D8A13F; --warn-bg:#332612; --bad:#E5736F; --bad-bg:#38191A;
+  --l1:#B8845C; --l2:#9AA4AE; --l3:#6E7882;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;text-wrap:balance}
+.mono{font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;font-variant-numeric:tabular-nums}
+.lbl{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",sans-serif;font-weight:600;
+  text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:var(--ink-3)}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1520px;margin:0 auto;padding:0 20px 64px}
+header.top{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;
+  padding:22px 0 16px;border-bottom:2px solid var(--ink);margin-bottom:22px}
+.brandmark{display:flex;align-items:baseline;gap:11px}
+.brandmark .bars{display:flex;gap:2.5px;align-self:center}
+.brandmark .bars i{display:block;width:3.5px;height:19px;border-radius:1px}
+h1{font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:700;font-size:23px;letter-spacing:-.01em}
+.sub{color:var(--ink-2);font-size:12.5px;max-width:62ch;margin-top:3px}
+.top-spacer{flex:1 1 40px}
+.std-flag{display:flex;flex-direction:column;gap:3px;text-align:right}
+.std-flag .v{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:500;color:var(--ink)}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:352px minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:1080px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--rule);border-radius:5px;box-shadow:var(--shadow)}
+.panel>.head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 13px;border-bottom:1px solid var(--rule);background:var(--sunk);
+  border-radius:5px 5px 0 0}
+.panel>.body{padding:14px 13px}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+/* ---------- controls ---------- */
+.field{display:flex;flex-direction:column;gap:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+input[type=text],input[type=number],select,textarea{
+  width:100%;font:inherit;color:var(--ink);background:var(--paper);
+  border:1px solid var(--rule-2);border-radius:3px;padding:6px 8px}
+input[type=number],select{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-variant-numeric:tabular-nums}
+textarea{font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.65;resize:vertical;min-height:210px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{
+  outline:2px solid var(--copper);outline-offset:1px}
+button{font:inherit;font-weight:500;cursor:pointer;border-radius:3px;border:1px solid var(--rule-2);
+  background:var(--card);color:var(--ink);padding:6px 11px;transition:background .12s,border-color .12s}
+button:hover{border-color:var(--ink-3);background:var(--sunk)}
+button.primary{background:var(--copper);border-color:var(--copper);color:#fff;font-weight:600}
+button.primary:hover{background:var(--copper-ink);border-color:var(--copper-ink)}
+button.mini{padding:3px 8px;font-size:11.5px}
+.btnrow{display:flex;flex-wrap:wrap;gap:7px}
+.hint{font-size:11px;color:var(--ink-3);line-height:1.45}
+
+/* ---------- summary tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:0;
+  border:1px solid var(--rule);border-radius:5px;overflow:hidden;background:var(--card);box-shadow:var(--shadow)}
+.tile{padding:11px 13px;border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:2px}
+.tile:last-child{border-right:none}
+.tile .n{font-family:"IBM Plex Mono",monospace;font-size:20px;font-weight:500;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1.15}
+.tile .n small{font-size:11.5px;font-weight:400;color:var(--ink-3);margin-left:2px}
+@media(max-width:640px){.tile{border-right:none;border-bottom:1px solid var(--rule)}}
+
+/* ---------- phase bars ---------- */
+.phases{display:flex;flex-direction:column;gap:8px}
+.prow{display:grid;grid-template-columns:58px minmax(0,1fr) 118px;align-items:center;gap:10px}
+.prow.phdr{padding-bottom:2px;border-bottom:1px solid var(--rule);margin-bottom:2px}
+.pname{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600}
+.pswatch{width:11px;height:11px;border-radius:2px;flex:none;border:1px solid rgba(128,128,128,.35)}
+.ptrack{height:9px;background:var(--sunk);border-radius:2px;overflow:hidden}
+.pfill{height:100%;border-radius:2px;transition:width .35s ease}
+.pval{font-family:"IBM Plex Mono",monospace;font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- schedule table ---------- */
+.tblwrap{overflow-x:auto}
+table.sched{border-collapse:collapse;width:100%;min-width:1000px;font-size:12.5px}
+table.sched th{font-family:"IBM Plex Sans Condensed",sans-serif;font-weight:600;font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);text-align:left;
+  padding:7px 8px;border-bottom:1.5px solid var(--ink);background:var(--sunk);
+  position:sticky;top:0;white-space:nowrap}
+table.sched th.r,table.sched td.r{text-align:right}
+table.sched td{padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.sched tbody tr:hover td{background:var(--sunk)}
+td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.ref{font-family:"IBM Plex Mono",monospace;font-weight:500;white-space:nowrap}
+td.desc{min-width:190px}
+.sevstripe{border-left:3px solid transparent;padding-left:9px!important}
+tr.sev-warn .sevstripe{border-left-color:var(--warn)}
+tr.sev-bad .sevstripe{border-left-color:var(--bad)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:1px 6px;border-radius:2px;
+  font-size:10.5px;font-weight:600;font-family:"IBM Plex Sans Condensed",sans-serif;
+  letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)} .chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.ptag{display:inline-block;padding:1px 5px;border-radius:2px;color:#fff;font-size:10.5px;font-weight:600;
+  font-family:"IBM Plex Mono",monospace}
+.ptag.L1{background:var(--l1)} .ptag.L2{background:var(--l2)} .ptag.L3{background:var(--l3)}
+.ptag.TP{background:var(--copper)}
+tfoot td{padding:8px;border-top:2px solid var(--ink);font-weight:600;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- QA list ---------- */
+.qa{display:flex;flex-direction:column;gap:0}
+.qa-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;padding:8px 13px;
+  border-bottom:1px solid var(--rule);align-items:start;font-size:12.5px}
+.qa-item:last-child{border-bottom:none}
+.qa-item .who{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);white-space:nowrap}
+.qa-empty{padding:16px 13px;color:var(--ok);display:flex;align-items:center;gap:8px;font-size:13px}
+
+/* ---------- title block (print) ---------- */
+.titleblock{display:none}
+.pill{display:inline-block;padding:2px 7px;border:1px solid var(--rule-2);border-radius:99px;
+  font-size:10.5px;color:var(--ink-2);font-family:"IBM Plex Sans Condensed",sans-serif;
+  font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+footer.foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--rule);
+  display:flex;flex-wrap:wrap;gap:14px 26px;justify-content:space-between;
+  font-size:11.5px;color:var(--ink-3);line-height:1.55}
+footer.foot p{margin:0;max-width:74ch}
+.notice{border:1px solid var(--rule-2);border-left:3px solid var(--copper);border-radius:3px;
+  padding:9px 12px;font-size:11.5px;color:var(--ink-2);background:var(--card);line-height:1.55}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+@media print{
+  @page{size:A3 landscape;margin:10mm}
+  body{background:#fff;color:#000;font-size:9.5pt}
+  .noprint{display:none!important}
+  .cols{display:block}
+  .panel{border:1px solid #000;box-shadow:none;break-inside:auto}
+  .panel>.head{background:#fff;border-bottom:1px solid #000}
+  table.sched{min-width:0;font-size:8pt}
+  table.sched th{background:#fff;color:#000;border-bottom:1px solid #000;position:static}
+  table.sched td{border-bottom:.5px solid #999}
+  .titleblock{display:block;border:1.5px solid #000;margin-top:8mm;break-inside:avoid}
+  .tb-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;}
+  .tb-cell{border-right:1px solid #000;padding:4px 7px;font-size:8pt}
+  .tb-cell:last-child{border-right:none}
+  .tb-cell .k{font-size:6.5pt;text-transform:uppercase;letter-spacing:.07em;color:#444}
+  .tiles{box-shadow:none;border:1px solid #000}
+  .tile{border-right:1px solid #000}
+}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="brandmark">
+    <span class="bars" aria-hidden="true">
+      <i style="background:var(--l1)"></i><i style="background:var(--l2)"></i><i style="background:var(--l3)"></i>
+    </span>
+    <div>
+      <h1>Distribution Board Schedule Generator</h1>
+      <div class="sub">Load list in — phase-balanced board schedule, cable sizing, protective device selection,
+        voltage-drop verification and a submittal-ready sheet out.</div>
+    </div>
+  </div>
+  <div class="top-spacer"></div>
+  <div class="std-flag">
+    <span class="lbl">Basis of calculation</span>
+    <span class="v" id="stdFlag">IEC 60364-5-52 · 400/230 V</span>
+  </div>
+</header>
+
+<div class="cols">
+
+  <!-- ================= LEFT: INPUT ================= -->
+  <div class="stack noprint">
+    <section class="panel">
+      <div class="head"><span class="lbl">1 · Load schedule input</span>
+        <button class="mini" id="btnSample">Load sample board</button></div>
+      <div class="body stack">
+        <div class="field">
+          <textarea id="loads" spellcheck="false" aria-label="Load list"></textarea>
+          <div class="hint"><strong>One circuit per line:</strong> description, load, phase, run length.<br>
+            Accepts <span class="mono">kW · W · kVA · A</span>, <span class="mono">1ph/3ph</span>,
+            <span class="mono">45m</span>, <span class="mono">pf0.85</span>. Order and missing fields are tolerated —
+            anything absent falls back to the defaults below.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="head"><span class="lbl">2 · Design parameters</span></div>
+      <div class="body stack">
+        <div class="grid2">
+          <div class="field"><span class="lbl">Standard</span>
+            <select id="std">
+              <option value="iec">IEC 60364 / BS 7671 (metric)</option>
+              <option value="nec">NEC NFPA 70 (AWG)</option>
+            </select></div>
+          <div class="field"><span class="lbl">System voltage</span>
+            <select id="volt">
+              <option value="400/230">400 / 230 V — 3ph 4W</option>
+              <option value="380/220">380 / 220 V — 3ph 4W</option>
+              <option value="415/240">415 / 240 V — 3ph 4W</option>
+              <option value="208/120">208 / 120 V — 3ph 4W</option>
+              <option value="480/277">480 / 277 V — 3ph 4W</option>
+            </select></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><span class="lbl">Conductor / insulation</span>
+            <select id="ins">
+              <option value="pvc">Cu / PVC — 70 °C</option>
+              <option value="xlpe">Cu / XLPE — 90 °C</option>
+            </select></div>
+          <div class="field"><span class="lbl">Installation method</span>
+            <select id="method">
+              <option value="C">C — clipped direct</option>
+              <option value="E">E — free air / tray</option>
+              <option value="B">B — in conduit / trunking</option>
+            </select></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><span class="lbl">Ambient °C</span><input type="number" id="amb" value="30" min="10" max="70" step="5"></div>
+          <div class="field"><span class="lbl">Circuits grouped</span><input type="number" id="grp" value="1" min="1" max="20"></div>
+          <div class="field"><span class="lbl">Default PF</span><input type="number" id="pf" value="0.9" min="0.5" max="1" step="0.05"></div>
+        </div>
+        <div class="grid3">
+          <div class="field"><span class="lbl">Default run m</span><input type="number" id="len" value="25" min="1"></div>
+          <div class="field"><span class="lbl">VD % lighting</span><input type="number" id="vdL" value="3" min="1" max="10" step="0.5"></div>
+          <div class="field"><span class="lbl">VD % power</span><input type="number" id="vdP" value="5" min="1" max="10" step="0.5"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><span class="lbl">Diversity factor</span><input type="number" id="div" value="0.8" min="0.3" max="1" step="0.05"></div>
+          <div class="field"><span class="lbl">Spare ways</span><input type="number" id="spare" value="3" min="0" max="12"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="head"><span class="lbl">3 · Board identification</span></div>
+      <div class="body stack">
+        <div class="grid2">
+          <div class="field"><span class="lbl">Board ref</span><input type="text" id="bref" value="DB-L2-A"></div>
+          <div class="field"><span class="lbl">Fed from</span><input type="text" id="bfrom" value="MDB-01"></div>
+        </div>
+        <div class="field"><span class="lbl">Project</span><input type="text" id="bproj" value="Sample — Level 2 Office Fit-out"></div>
+        <div class="field"><span class="lbl">Location</span><input type="text" id="bloc" value="Level 2 · Electrical Riser"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="head"><span class="lbl">4 · Output</span></div>
+      <div class="body stack">
+        <div class="btnrow">
+          <button class="primary" id="btnPrint">Print submittal sheet</button>
+          <button id="btnCsv">Schedule CSV</button>
+          <button id="btnRevit">Revit / Dynamo CSV</button>
+        </div>
+        <div class="hint" id="dlStatus" aria-live="polite" style="min-height:1em"></div>
+        <div class="notice"><strong>Revit / Dynamo CSV</strong> exports one row per circuit with the column
+          headers a Dynamo graph reads straight into Revit panel-schedule parameters —
+          <span class="mono">Circuit Number, Load Name, Rating, Frame, Number of Poles, Apparent Load,
+          Voltage Drop</span> — so the board lands in the model already populated.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= RIGHT: RESULTS ================= -->
+  <div class="stack">
+    <div class="tiles" id="tiles"></div>
+
+    <section class="panel">
+      <div class="head"><span class="lbl">Phase balance</span><span class="pill" id="imbPill">—</span></div>
+      <div class="body"><div class="phases" id="phases"></div></div>
+    </section>
+
+    <section class="panel">
+      <div class="head">
+        <span class="lbl">Board schedule — <span id="hdrRef">DB-L2-A</span></span>
+        <span class="pill" id="wayPill">—</span>
+      </div>
+      <div class="tblwrap">
+        <table class="sched">
+          <thead><tr>
+            <th class="sevstripe">Way</th><th>Circuit description</th><th>Ph</th>
+            <th class="r">Load</th><th class="r">Ib A</th><th class="r">In A</th>
+            <th>Device</th><th class="r">Live</th><th class="r">CPC</th>
+            <th class="r">It A</th><th class="r">L m</th><th class="r">ΔU %</th><th>Check</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+          <tfoot id="foot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="head"><span class="lbl">QA / QC review</span><span class="pill" id="qaPill">—</span></div>
+      <div class="qa" id="qa"></div>
+    </section>
+
+    <div class="titleblock">
+      <div class="tb-grid">
+        <div class="tb-cell"><div class="k">Project</div><div id="tbProj"></div>
+          <div class="k" style="margin-top:5px">Location</div><div id="tbLoc"></div></div>
+        <div class="tb-cell"><div class="k">Board reference</div><div id="tbRef"></div>
+          <div class="k" style="margin-top:5px">Fed from</div><div id="tbFrom"></div></div>
+        <div class="tb-cell"><div class="k">Basis of calculation</div><div id="tbStd"></div>
+          <div class="k" style="margin-top:5px">Issued</div><div id="tbDate"></div></div>
+        <div class="tb-cell"><div class="k">Status</div><div>FOR REVIEW</div>
+          <div class="k" style="margin-top:5px">Rev</div><div>P01</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="foot">
+  <p><strong>Reference data note.</strong> Current-carrying capacities and voltage-drop coefficients are the
+  published tabulated values for copper conductors under the stated installation method and ambient temperature
+  (IEC 60364-5-52 / BS 7671 Appendix 4; NEC Table 310.16). They are a calculation aid for design development —
+  every schedule must be verified by the responsible engineer against the project specification, the
+  authority having jurisdiction, and the manufacturer's device data before issue for construction.</p>
+  <p id="byline"></p>
+</footer>
+</div>
+
+<script>
+/* ============================================================
+   Reference data — copper conductors
+   ============================================================ */
+
+// IEC 60364-5-52 tabulated current-carrying capacity, 30 degC ambient, copper
+// [csa mm2, 2 loaded conductors (1ph), 3 loaded conductors (3ph)]
+const IEC_AMP = {
+  pvc: { // 70 degC thermoplastic
+    C: [[1.5,19.5,17.5],[2.5,27,24],[4,36,32],[6,46,41],[10,63,57],[16,85,76],[25,112,96],
+        [35,138,119],[50,168,144],[70,213,184],[95,258,223],[120,299,259],[150,344,299],
+        [185,392,341],[240,461,403]],
+    E: [[1.5,22,18.5],[2.5,30,25],[4,40,34],[6,51,43],[10,70,60],[16,94,80],[25,119,101],
+        [35,148,126],[50,180,153],[70,232,196],[95,282,238],[120,328,276],[150,379,319],
+        [185,434,364],[240,514,430]],
+    B: [[1.5,17.5,15.5],[2.5,24,21],[4,32,28],[6,41,36],[10,57,50],[16,76,68],[25,101,89],
+        [35,125,110],[50,151,134],[70,192,171],[95,232,207],[120,269,239],[150,309,275],
+        [185,353,314],[240,415,370]]
+  },
+  xlpe: { // 90 degC thermosetting
+    C: [[1.5,26,23],[2.5,36,32],[4,49,42],[6,63,54],[10,86,75],[16,115,100],[25,149,127],
+        [35,185,158],[50,225,192],[70,289,246],[95,352,298],[120,410,346],[150,473,399],
+        [185,542,456],[240,641,538]],
+    E: [[1.5,29,25],[2.5,39,33],[4,52,44],[6,67,57],[10,92,78],[16,123,104],[25,157,133],
+        [35,194,164],[50,236,198],[70,304,253],[95,370,306],[120,431,354],[150,500,408],
+        [185,574,467],[240,680,551]],
+    B: [[1.5,23,20],[2.5,31,28],[4,42,37],[6,54,48],[10,75,66],[16,100,88],[25,133,117],
+        [35,164,144],[50,198,175],[70,253,222],[95,306,269],[120,354,312],[150,407,358],
+        [185,464,408],[240,546,481]]
+  }
+};
+
+// Voltage drop, mV/A/m, copper. [csa, 1ph (2 core), 3ph (3/4 core)]
+const IEC_VD = {
+  pvc:[[1.5,29,25],[2.5,18,15],[4,11,9.5],[6,7.3,6.4],[10,4.4,3.8],[16,2.8,2.4],[25,1.75,1.5],
+       [35,1.25,1.1],[50,0.93,0.80],[70,0.63,0.55],[95,0.47,0.41],[120,0.38,0.33],
+       [150,0.30,0.26],[185,0.25,0.21],[240,0.19,0.165]],
+  xlpe:[[1.5,29,25],[2.5,18,15],[4,11,9.5],[6,7.3,6.4],[10,4.4,3.8],[16,2.8,2.4],[25,1.75,1.5],
+       [35,1.25,1.1],[50,0.93,0.80],[70,0.63,0.55],[95,0.47,0.41],[120,0.38,0.33],
+       [150,0.30,0.26],[185,0.25,0.21],[240,0.19,0.165]]
+};
+
+// NEC Table 310.16, 75 degC copper, not more than 3 CCC in raceway
+const NEC_AMP = [["14",20],["12",25],["10",35],["8",50],["6",65],["4",85],["3",100],["2",115],
+  ["1",130],["1/0",150],["2/0",175],["3/0",200],["4/0",230],["250",255],["300",285],
+  ["350",310],["400",335],["500",380]];
+// NEC 240.4(D) small-conductor overcurrent limits
+const NEC_OCPD_LIMIT = {"14":15,"12":20,"10":30};
+// approx ohms/1000ft, uncoated Cu, NEC Ch.9 Table 8 dc resistance
+const NEC_R = {"14":3.14,"12":1.98,"10":1.24,"8":0.778,"6":0.491,"4":0.308,"3":0.245,"2":0.194,
+  "1":0.154,"1/0":0.122,"2/0":0.0967,"3/0":0.0766,"4/0":0.0608,"250":0.0515,"300":0.0429,
+  "350":0.0367,"400":0.0321,"500":0.0258};
+
+const MCB = [6,10,13,16,20,25,32,40,50,63,80,100,125,160,200,250,315,400,500,630];
+const NEC_BRK = [15,20,25,30,35,40,45,50,60,70,80,90,100,110,125,150,175,200,225,250,300,350,400,450,500,600];
+
+// IEC 60364-5-52 Table B.52.14 ambient correction
+const CA_PVC = {10:1.22,15:1.17,20:1.12,25:1.06,30:1.00,35:0.94,40:0.87,45:0.79,50:0.71,55:0.61,60:0.50,65:0.35,70:0.00};
+const CA_XLPE= {10:1.15,15:1.12,20:1.08,25:1.04,30:1.00,35:0.96,40:0.91,45:0.87,50:0.82,55:0.76,60:0.71,65:0.65,70:0.58};
+// Table B.52.17 grouping, bunched in air / clipped
+const CG = {1:1.00,2:0.80,3:0.70,4:0.65,5:0.60,6:0.57,7:0.54,8:0.52,9:0.50,10:0.48,
+            12:0.45,14:0.43,16:0.41,18:0.39,20:0.38};
+
+const SAMPLE = [
+ "Lighting - open plan north, 2.6 kW, 1ph, 38m",
+ "Lighting - open plan south, 2.4 kW, 1ph, 42m",
+ "Lighting - meeting rooms + corridor, 1.8 kW, 1ph, 30m",
+ "Emergency lighting circuit, 0.6 kW, 1ph, 55m",
+ "Small power - workstations A, 4.4 kW, 1ph, 26m",
+ "Small power - workstations B, 4.4 kW, 1ph, 31m",
+ "Small power - workstations C, 3.6 kW, 1ph, 34m",
+ "Tea point - counter sockets, 3.2 kW, 1ph, 22m",
+ "Water heater - tea point, 3 kW, 1ph, 24m",
+ "AHU-2.1 supply fan, 15 kW, 3ph, 48m, pf0.85",
+ "FCU circuit - perimeter zone, 5.5 kW, 3ph, 40m",
+ "Server room CRAC unit, 11 kW, 3ph, 52m, pf0.85",
+ "Data rack - UPS output, 8 kVA, 1ph, 18m",
+ "Fire alarm panel supply, 0.5 kW, 1ph, 15m",
+ "CCTV / ELV cabinet supply, 1.2 kW, 1ph, 20m",
+ "Access control cabinet, 0.8 kW, 1ph, 20m",
+ "Hand dryers - WC block, 3 kW, 1ph, 45m",
+ "Motorised smoke damper supply, 1.5 kW, 1ph, 36m"
+].join("\n");
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const n1 = v => (Math.round(v*10)/10).toFixed(1);
+const n2 = v => (Math.round(v*100)/100).toFixed(2);
+
+function interp(tbl,k){ // nearest-lower lookup on a keyed object
+  const keys = Object.keys(tbl).map(Number).sort((a,b)=>a-b);
+  let best = keys[0];
+  for(const kk of keys){ if(kk<=k) best=kk; }
+  return tbl[best];
+}
+function pickUp(list,v){ for(const x of list){ if(x>=v) return x; } return list[list.length-1]; }
+
+const LIGHT_RE = /\b(light|lighting|luminaire|lamp|emergency light|exit sign)/i;
+
+/* ---------- parser ---------- */
+function parseLoads(text, d){
+  const out=[];
+  text.split(/\r?\n/).forEach(raw=>{
+    const line = raw.trim();
+    if(!line || line.startsWith("#")) return;
+    const parts = line.split(/[,;\t]+/).map(s=>s.trim()).filter(Boolean);
+    if(!parts.length) return;
+    let desc = parts[0];
+    let watts=null, kva=null, amps=null, phase=null, len=null, pf=null;
+
+    [parts[0]].concat(parts.slice(1)).forEach((tok,i)=>{
+      const isDesc = (i === 0);
+      const t = tok.toLowerCase();
+      if(!isDesc){
+        if(/^3\s*(ph|p|phase)|^three/.test(t)) phase=3;
+        if(/^1\s*(ph|p|phase)|^single/.test(t)) phase=1;
+      }
+      let m;
+      if((m=t.match(/([\d.]+)\s*kva/))) kva=parseFloat(m[1])*1000;
+      else if((m=t.match(/([\d.]+)\s*va\b/))) kva=parseFloat(m[1]);
+      else if((m=t.match(/([\d.]+)\s*kw/))) watts=parseFloat(m[1])*1000;
+      else if(!isDesc && (m=t.match(/([\d.]+)\s*w\b/))) watts=parseFloat(m[1]);
+      if(!isDesc && (m=t.match(/([\d.]+)\s*a\b/))) amps=parseFloat(m[1]);
+      if((m=t.match(/([\d.]+)\s*m\b/))) len=parseFloat(m[1]);
+      if((m=t.match(/pf\s*[:=]?\s*([\d.]+)/))) pf=parseFloat(m[1]);
+      // bare number with no unit -> treat as kW
+      if(!isDesc && watts===null && kva===null && amps===null && /^[\d.]+$/.test(t))
+        watts=parseFloat(t)*1000;
+    });
+
+    out.push({
+      desc, watts, kva, amps,
+      phase: phase || 1,
+      len: len || d.len,
+      pf: pf || d.pf,
+      lighting: LIGHT_RE.test(desc)
+    });
+  });
+  return out;
+}
+
+/* ============================================================
+   Core calculation
+   ============================================================ */
+function calc(){
+  const d = {
+    std:$("std").value, ins:$("ins").value, method:$("method").value,
+    amb:+$("amb").value, grp:+$("grp").value, pf:+$("pf").value, len:+$("len").value,
+    vdL:+$("vdL").value, vdP:+$("vdP").value, div:+$("div").value, spare:+$("spare").value
+  };
+  const [VLL,VLN] = $("volt").value.split("/").map(Number);
+  const isNEC = d.std==="nec";
+
+  const ca = d.ins==="pvc" ? interp(CA_PVC,d.amb) : interp(CA_XLPE,d.amb);
+  const cg = interp(CG,d.grp);
+  const kTotal = Math.max(ca*cg, 0.01);
+
+  const ampTable = isNEC ? NEC_AMP : IEC_AMP[d.ins][d.method];
+  const vdTable  = IEC_VD[d.ins];
+  const brkList  = isNEC ? NEC_BRK : MCB;
+
+  const circuits = parseLoads($("loads").value, d);
+  const phaseLoad = {1:0,2:0,3:0};   // running amps per phase for balancing
+  const rows = [];
+  const issues = [];
+
+  // three-phase first so single-phase can balance around them
+  const order = circuits.map((c,i)=>({c,i})).sort((a,b)=>b.c.phase-a.c.phase);
+
+  order.forEach(({c})=>{
+    // --- apparent power & design current
+    let S; // VA
+    if(c.kva!==null && c.kva!==undefined) S=c.kva;
+    else if(c.watts!==null && c.watts!==undefined) S=c.watts/c.pf;
+    else if(c.amps!==null && c.amps!==undefined)
+      S = c.phase===3 ? c.amps*Math.sqrt(3)*VLL : c.amps*VLN;
+    else S=0;
+
+    const Ib = c.phase===3 ? S/(Math.sqrt(3)*VLL) : S/VLN;
+
+    // --- protective device
+    const In = pickUp(brkList, Ib);
+
+    // --- required tabulated capacity
+    const ItReq = In/kTotal;
+
+    // --- cable selection: satisfy ampacity, then voltage drop
+    const vdLimitPct = c.lighting ? d.vdL : d.vdP;
+    let chosen=null, vdPct=0, It=0, vdV=0;
+
+    for(const row of ampTable){
+      const size = row[0];
+      const cap  = isNEC ? row[1] : (c.phase===3 ? row[2] : row[1]);
+      if(cap < ItReq) continue;
+      // NEC 240.4(D) small conductor limit
+      if(isNEC && NEC_OCPD_LIMIT[size] && In > NEC_OCPD_LIMIT[size]) continue;
+
+      if(isNEC){
+        const R = NEC_R[size];                       // ohm / 1000 ft
+        const Lft = c.len*3.28084;
+        vdV = c.phase===3 ? Math.sqrt(3)*Ib*R*Lft/1000 : 2*Ib*R*Lft/1000;
+        vdPct = vdV/(c.phase===3?VLL:VLN)*100;
+      }else{
+        const vrow = vdTable.find(r=>r[0]===size);
+        const mv = c.phase===3 ? vrow[2] : vrow[1];
+        vdV = mv*Ib*c.len/1000;
+        vdPct = vdV/(c.phase===3?VLL:VLN)*100;
+      }
+      if(vdPct<=vdLimitPct){ chosen=size; It=cap; break; }
+      chosen=size; It=cap;                            // remember, keep trying larger
+    }
+    if(chosen===null){
+      const last = ampTable[ampTable.length-1];
+      chosen=last[0]; It=isNEC?last[1]:(c.phase===3?last[2]:last[1]);
+    }
+
+    // --- phase assignment
+    let ph;
+    if(c.phase===3){ ph="TP"; phaseLoad[1]+=Ib; phaseLoad[2]+=Ib; phaseLoad[3]+=Ib; }
+    else{
+      const lightest = [1,2,3].reduce((a,b)=> phaseLoad[a]<=phaseLoad[b]?a:b);
+      ph="L"+lightest; phaseLoad[lightest]+=Ib;
+    }
+
+    // --- CPC / EGC sizing (IEC 543.1.2 adiabatic simplification / NEC 250.122)
+    const cpc = isNEC ? necEGC(In) : iecCPC(chosen);
+
+    // --- verdict
+    let sev="ok", note="OK";
+    if(vdPct>vdLimitPct){ sev="bad"; note="ΔU "+n2(vdPct)+"% > "+vdLimitPct+"%"; }
+    else if(vdPct>vdLimitPct*0.85){ sev="warn"; note="ΔU near limit"; }
+    if(It*kTotal < In){ sev="bad"; note="Iz < In"; }
+    if(S===0){ sev="warn"; note="No load parsed"; }
+
+    rows.push({desc:c.desc, ph, poles:c.phase===3?3:1, S, Ib, In, chosen, cpc, It, len:c.len,
+               vdPct, vdV, sev, note, lighting:c.lighting, pf:c.pf,
+               device:(isNEC?"":"MCB ")+(isNEC? In+"AT/"+necFrame(In)+"AF" : In+" A · C-curve")});
+  });
+
+  /* ---------- board totals ---------- */
+  const totalVA = rows.reduce((a,r)=>a+r.S,0);
+  const mdVA = totalVA*d.div;
+  const mdA  = mdVA/(Math.sqrt(3)*VLL);
+  const incomer = pickUp(brkList, mdA);
+  const Iavg = (phaseLoad[1]+phaseLoad[2]+phaseLoad[3])/3;
+  const Imax = Math.max(phaseLoad[1],phaseLoad[2],phaseLoad[3]);
+  const Imin = Math.min(phaseLoad[1],phaseLoad[2],phaseLoad[3]);
+  const imb  = Iavg>0 ? (Imax-Imin)/Iavg*100 : 0;
+
+  const waysUsed = rows.reduce((a,r)=>a+r.poles,0);
+  const waysTotal = Math.ceil((waysUsed + d.spare*1)/3)*3;
+
+  /* ---------- QA findings ---------- */
+  rows.forEach((r,i)=>{
+    if(r.sev==="bad") issues.push({who:"Way "+(i+1), sev:"bad",
+      txt:r.desc+" — "+r.note+". Cable increased to the largest size available without clearing the limit; "+
+          "reduce the run length, split the load, or accept a higher tabulated size."});
+  });
+  rows.forEach((r,i)=>{
+    if(r.sev==="warn" && r.note==="ΔU near limit") issues.push({who:"Way "+(i+1), sev:"warn",
+      txt:r.desc+" — voltage drop is "+n2(r.vdPct)+"%, within limit but with little margin for site route changes."});
+    if(r.note==="No load parsed") issues.push({who:"Way "+(i+1), sev:"warn",
+      txt:'"'+r.desc+'" — no load value recognised on this line. Add e.g. "3.5 kW" or "16 A".'});
+  });
+  if(imb>15) issues.push({who:"Board", sev:"warn",
+    txt:"Phase imbalance is "+n1(imb)+"% (L1 "+n1(phaseLoad[1])+" A / L2 "+n1(phaseLoad[2])+
+        " A / L3 "+n1(phaseLoad[3])+" A). Above ~15% consider redistributing the larger single-phase circuits."});
+  if(kTotal<0.7) issues.push({who:"Board", sev:"warn",
+    txt:"Combined derating is "+n2(kTotal)+" (ambient "+n2(ca)+" × grouping "+n2(cg)+
+        "). Cable sizes are driven by derating rather than load — check whether the grouping assumption is real."});
+  const em = rows.filter(r=>/emergency|fire alarm|smoke/i.test(r.desc));
+  if(em.length) issues.push({who:"Life safety", sev:"warn",
+    txt:em.length+" life-safety circuit(s) detected ("+em.map(r=>r.desc).join("; ")+
+        "). Confirm segregation, fire-rated cable type and supply arrangement — this schedule sizes them as ordinary circuits."});
+  const spares = rows.filter(r=>r.In>=100).length;
+  if(spares) issues.push({who:"Board", sev:"warn",
+    txt:spares+" circuit(s) at 100 A or above — confirm these belong on a final distribution board rather than a sub-main from the MDB."});
+
+  return {rows,phaseLoad,totalVA,mdVA,mdA,incomer,imb,waysUsed,waysTotal,issues,
+          VLL,VLN,isNEC,ca,cg,kTotal,d};
+}
+
+function iecCPC(live){ // BS 7671 Table 54.7 simplified
+  if(live<=16) return live;
+  if(live<=35) return 16;
+  return Math.max(16, Math.ceil(live/2));
+}
+function necEGC(In){ // NEC Table 250.122
+  const t=[[15,"14"],[20,"12"],[60,"10"],[100,"8"],[200,"6"],[300,"4"],[400,"3"],[500,"2"],[600,"1"]];
+  for(const [a,s] of t) if(In<=a) return s;
+  return "1/0";
+}
+function necFrame(In){ return pickUp([100,225,400,600,800],In); }
+
+/* ============================================================
+   Render
+   ============================================================ */
+function render(){
+  const R = calc();
+  const isNEC = R.isNEC;
+  const unit = isNEC ? "AWG/kcmil" : "mm²";
+
+  $("stdFlag").textContent = (isNEC ? "NEC NFPA 70 · Table 310.16" : "IEC 60364-5-52 / BS 7671")
+    + " · " + R.VLL + "/" + R.VLN + " V";
+  $("hdrRef").textContent = $("bref").value;
+
+  /* tiles */
+  $("tiles").innerHTML = [
+    ["Connected kVA", n1(R.totalVA/1000), "kVA"],
+    ["Diversity", n2(R.d.div), ""],
+    ["Maximum demand", n1(R.mdVA/1000), "kVA"],
+    ["Demand current", n1(R.mdA), "A"],
+    ["Incomer", R.incomer, "A"],
+    ["Ways", R.waysUsed + " / " + R.waysTotal, ""],
+    ["Derating k", n2(R.kTotal), ""]
+  ].map(([k,v,u])=>
+    '<div class="tile"><span class="lbl">'+k+'</span><span class="n">'+v+
+    (u?'<small>'+u+'</small>':'')+'</span></div>').join("");
+
+  /* phase bars */
+  const pmax = Math.max(R.phaseLoad[1],R.phaseLoad[2],R.phaseLoad[3],1);
+  $("phases").innerHTML =
+    '<div class="prow phdr"><span class="lbl">Phase</span>'+
+    '<span class="lbl">Connected current, undiversified</span>'+
+    '<span class="lbl" style="text-align:right">Conn. / &times;'+n2(R.d.div)+'</span></div>' +
+    [1,2,3].map(p=>{
+      const w = R.phaseLoad[p]/pmax*100;
+      return '<div class="prow"><span class="pname"><span class="pswatch" style="background:var(--l'+p+')"></span>L'+p+'</span>'+
+        '<span class="ptrack"><span class="pfill" style="width:'+w+'%;background:var(--l'+p+')"></span></span>'+
+        '<span class="pval">'+n1(R.phaseLoad[p])+' <span style="color:var(--ink-3)">/ '+
+        n1(R.phaseLoad[p]*R.d.div)+'</span> A</span></div>';
+    }).join("");
+  const ip=$("imbPill");
+  ip.textContent = "Imbalance " + n1(R.imb) + "%";
+  ip.style.color = R.imb>15 ? "var(--bad)" : R.imb>8 ? "var(--warn)" : "var(--ok)";
+  ip.style.borderColor = "currentColor";
+
+  /* rows */
+  $("rows").innerHTML = R.rows.map((r,i)=>{
+    const chip = r.sev==="ok" ? '<span class="chip ok">Pass</span>'
+      : r.sev==="warn" ? '<span class="chip warn">'+r.note+'</span>'
+      : '<span class="chip bad">'+r.note+'</span>';
+    return '<tr class="sev-'+r.sev+'">'+
+      '<td class="ref sevstripe">'+String(i+1).padStart(2,"0")+'</td>'+
+      '<td class="desc">'+esc(r.desc)+(r.lighting?' <span class="pill">Ltg</span>':'')+'</td>'+
+      '<td><span class="ptag '+r.ph+'">'+r.ph+'</span></td>'+
+      '<td class="num r">'+n2(r.S/1000)+'</td>'+
+      '<td class="num r">'+n1(r.Ib)+'</td>'+
+      '<td class="num r">'+r.In+'</td>'+
+      '<td class="num">'+r.device+'</td>'+
+      '<td class="num r">'+r.chosen+'</td>'+
+      '<td class="num r">'+r.cpc+'</td>'+
+      '<td class="num r">'+n1(r.It)+'</td>'+
+      '<td class="num r">'+r.len+'</td>'+
+      '<td class="num r">'+n2(r.vdPct)+'</td>'+
+      '<td>'+chip+'</td></tr>';
+  }).join("");
+
+  $("foot").innerHTML = '<tr><td colspan="3">Board total — '+R.rows.length+' circuits</td>'+
+    '<td class="r">'+n2(R.totalVA/1000)+'</td><td class="r">'+n1(R.mdA)+'</td>'+
+    '<td class="r">'+R.incomer+'</td><td colspan="7">Incomer / main switch · '+
+    (isNEC?"":"MCCB ")+R.incomer+' A · live sizes in '+unit+'</td></tr>';
+
+  $("wayPill").textContent = R.rows.length + " circuits · " + R.waysUsed + " poles";
+
+  /* QA */
+  const qa=$("qa");
+  if(!R.issues.length){
+    qa.innerHTML='<div class="qa-empty"><span class="chip ok">Clear</span>'+
+      'No exceptions raised. Every circuit satisfies ampacity and voltage drop at the stated derating.</div>';
+  }else{
+    qa.innerHTML = R.issues.map(x=>
+      '<div class="qa-item"><span class="who">'+x.who+'</span>'+
+      '<span><span class="chip '+x.sev+'">'+(x.sev==="bad"?"Action":"Review")+'</span> '+esc(x.txt)+'</span></div>'
+    ).join("");
+  }
+  const nb=R.issues.filter(i=>i.sev==="bad").length;
+  const qp=$("qaPill");
+  qp.textContent = nb ? nb+" action · "+(R.issues.length-nb)+" review" : R.issues.length+" review";
+  qp.style.color = nb ? "var(--bad)" : R.issues.length ? "var(--warn)" : "var(--ok)";
+  qp.style.borderColor="currentColor";
+
+  /* title block */
+  $("tbProj").textContent=$("bproj").value; $("tbLoc").textContent=$("bloc").value;
+  $("tbRef").textContent=$("bref").value;  $("tbFrom").textContent=$("bfrom").value;
+  $("tbStd").textContent=$("stdFlag").textContent;
+  $("tbDate").textContent=new Date().toISOString().slice(0,10);
+
+  window.__R = R;
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+
+/* ---------- exports ---------- */
+let DL = undefined;                     // downloads namespace, once resolved
+function status(msg,bad){
+  const el=$("dlStatus"); el.textContent=msg;
+  el.style.color = bad ? "var(--bad)" : "var(--ok)";
+  clearTimeout(status._t); status._t=setTimeout(()=>{el.textContent="";},6000);
+}
+async function dl(name,txt){
+  if(DL===undefined) DL = await claude.use("downloads");   // null = unavailable
+  if(DL){
+    try{
+      await DL.save({filename:name, data:txt});
+      status("Saved "+name);
+    }catch(e){
+      if(e && e.code==="declined") return;                 // viewer said no; stay quiet
+      if(e && e.code==="rate_limited") status("A save prompt is already open.",true);
+      else fallbackDl(name,txt);
+    }
+    return;
+  }
+  fallbackDl(name,txt);                                    // opened outside claude.ai
+}
+function fallbackDl(name,txt){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv;charset=utf-8"}));
+  a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},0);
+}
+function csvEsc(v){ v=String(v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function toCsv(rows){ return rows.map(r=>r.map(csvEsc).join(",")).join("\n"); }
+
+$("btnCsv").onclick=async()=>{
+  const R=window.__R, u=R.isNEC?"AWG":"mm2";
+  const out=[["Way","Description","Phase","Poles","kVA","Ib_A","In_A","Device",
+    "Live_"+u,"CPC_"+u,"Iz_tabulated_A","Length_m","VoltDrop_pct","Status"]];
+  R.rows.forEach((r,i)=>out.push([String(i+1).padStart(2,"0"),r.desc,r.ph,r.poles,n2(r.S/1000),
+    n1(r.Ib),r.In,r.device,r.chosen,r.cpc,n1(r.It),r.len,n2(r.vdPct),r.note]));
+  await dl($("bref").value.replace(/\s+/g,"_")+"_schedule.csv", toCsv(out));
+};
+
+$("btnRevit").onclick=async()=>{
+  const R=window.__R;
+  // Column headers matched to Revit electrical circuit / panel schedule parameters
+  const out=[["Panel","Circuit Number","Load Name","Number of Poles","Rating","Frame",
+    "Apparent Load","Voltage","Load Classification","Wire Size","Ground Wire Size",
+    "Length","Voltage Drop","Comments"]];
+  R.rows.forEach((r,i)=>out.push([
+    $("bref").value, String(i+1),  r.desc, r.poles, r.In, R.isNEC?necFrame(r.In):r.In,
+    Math.round(r.S)+" VA", (r.poles===3?R.VLL:R.VLN)+" V",
+    r.lighting?"Lighting":"Power", r.chosen, r.cpc, r.len+" m", n2(r.vdPct)+" %", r.note
+  ]));
+  await dl($("bref").value.replace(/\s+/g,"_")+"_revit_import.csv", toCsv(out));
+};
+
+$("btnPrint").onclick=()=>window.print();
+$("btnSample").onclick=()=>{ $("loads").value=SAMPLE; render(); };
+
+/* ---------- wire up ---------- */
+["loads","std","volt","ins","method","amb","grp","pf","len","vdL","vdP","div","spare",
+ "bref","bfrom","bproj","bloc"].forEach(id=>{
+  const el=$(id);
+  el.addEventListener(el.tagName==="SELECT"?"change":"input", render);
+});
+
+$("byline").innerHTML =
+  "<strong>Saif-Eldien</strong> &middot; Electrical design &amp; BIM engineer, Egypt (GMT+3)<br>"+
+  "Distribution board schedules, Revit MEP electrical modelling, and engineering "+
+  "calculation &amp; document automation. Reply to the message this link came with.";
+
+$("loads").value = SAMPLE;
+render();
+</script>
