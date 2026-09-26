@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schema.freqtrade.io/schema.json",
+  "add_config_files": ["config.bybit.dryrun.json", "freqai.common.json"],
+  "bot_name": "ourbank-freqai-dryrun",
+  "strategy": "FreqAIStrategy",
+  "db_url": "sqlite:///user_data/dryrun-freqai.sqlite",
+  "freqai_strategy": {
+    "entry_threshold": 0.020,
+    "exit_threshold": 0.0
+  },
+  "freqai": {
+    "identifier": "lgbm-reg-v1-dryrun-bybit",
+    "expiration_hours": 30,
+    "model_training_parameters": {"n_jobs": 2}
+  },
+  "api_server": {
+    "enabled": true,
+    "listen_port": 8083,
+    "password": "CHANGE-ME-GcbBMyieAhfAPgCe",
+    "jwt_secret_key": "CHANGE-ME--VFLZojBbYta1ZMM-AE0s4OBR4noEI9OV",
+    "ws_token": "CHANGE-ME-szd7YC0Vpn10Y3sL"
+  }
+}

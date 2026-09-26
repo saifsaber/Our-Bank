@@ -1,0 +1,86 @@
+# Live DRY-RUN (paper trading) of three strategies on Bybit spot prices.
+# No API key, no real money. Guide (Arabic): docs/dry-run-guide.md
+#
+#   docker compose up -d            # start the three bots in the background
+#   docker compose ps               # are they running?
+#   docker compose logs -f rsi      # follow one bot's log (Ctrl+C to stop following)
+#   docker compose run --rm report  # weekly comparison -> user_data/dryrun_report.md
+#   docker compose down             # stop everything (the trade history stays in user_data/)
+#
+# FreqUI (the web dashboard), only reachable from this computer:
+#   RSI    -> http://127.0.0.1:8081
+#   EMA    -> http://127.0.0.1:8082
+#   FreqAI -> http://127.0.0.1:8083
+# Username "ourbank", passwords in config/config.dryrun.*.json (change them first!).
+
+x-bot: &bot
+  image: freqtradeorg/freqtrade:2026.8
+  restart: unless-stopped
+  volumes:
+    - ./user_data:/freqtrade/user_data
+    - ./strategies:/freqtrade/strategies:ro
+    - ./config:/freqtrade/config:ro
+  environment:
+    # Inside the container the API must listen on all interfaces; the port mapping below
+    # still only exposes it on 127.0.0.1 of the host.
+    FREQTRADE__API_SERVER__LISTEN_IP_ADDRESS: "0.0.0.0"
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "3"}
+  depends_on:
+    init:
+      condition: service_completed_successfully
+
+services:
+  # One-shot helper: creates user_data/ and makes it writable for the container user
+  # (uid 1000). Needed on Linux servers where the repo is owned by root; harmless elsewhere.
+  init:
+    image: freqtradeorg/freqtrade:2026.8
+    user: "0:0"
+    entrypoint: ["sh", "-c", "mkdir -p /freqtrade/user_data/logs /freqtrade/user_data/data && chown -R 1000:1000 /freqtrade/user_data"]
+    volumes:
+      - ./user_data:/freqtrade/user_data
+    restart: "no"
+
+  rsi:
+    <<: *bot
+    container_name: ourbank-rsi
+    command: >
+      trade --config config/config.dryrun.rsi.json
+      --logfile user_data/logs/dryrun-rsi.log
+    ports:
+      - "127.0.0.1:8081:8081"
+
+  ema:
+    <<: *bot
+    container_name: ourbank-ema
+    command: >
+      trade --config config/config.dryrun.ema.json
+      --logfile user_data/logs/dryrun-ema.log
+    ports:
+      - "127.0.0.1:8082:8082"
+
+  freqai:
+    <<: *bot
+    # FreqAI needs the image variant with LightGBM & co. The 2026.8_freqai image ships
+    # joblib 1.5.3, so the joblib<1.6 pin from requirements.txt is already satisfied.
+    image: freqtradeorg/freqtrade:2026.8_freqai
+    container_name: ourbank-freqai
+    command: >
+      trade --config config/config.dryrun.freqai.json
+      --logfile user_data/logs/dryrun-freqai.log
+    ports:
+      - "127.0.0.1:8083:8083"
+
+  # Not started by "up"; run with: docker compose run --rm report
+  report:
+    image: freqtradeorg/freqtrade:2026.8
+    profiles: ["tools"]
+    entrypoint: ["python", "scripts/dryrun_report.py"]
+    volumes:
+      - ./user_data:/freqtrade/user_data
+      - ./scripts:/freqtrade/scripts:ro
+    restart: "no"
+    depends_on:
+      init:
+        condition: service_completed_successfully

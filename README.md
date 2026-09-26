@@ -16,8 +16,12 @@
 | `strategies/DonchianBreakoutBaseline.py` | كسر أعلى سعر في N شمعة (تتبع اتجاه) |
 | `strategies/FreqAIStrategy.py` | LightGBM يتوقع العائد في الـ 12 ساعة الجاية، بيتدرب walk-forward |
 | `config/config.backtest.json` | إعدادات الباك تست (100 USDT وهمي، رسوم 0.1%) |
-| `config/config.freqai.json` | إعدادات FreqAI |
-| `config/config.bybit.dryrun.json` | قالب تشغيل dry-run لايف على Bybit |
+| `config/config.freqai.json` | إعدادات FreqAI للباك تست (OKX) |
+| `config/freqai.common.json` | إعدادات FreqAI المشتركة (الموديل والـ features) |
+| `config/config.bybit.dryrun.json` | الإعدادات المشتركة للـ dry-run اللايف على Bybit |
+| `config/config.dryrun.*.json` | بوت لكل استراتيجية (قاعدة بيانات وبورت وباسورد منفصلين) |
+| `docker-compose.yml` | تشغيل الـ 3 بوتات dry-run بـ Docker |
+| `scripts/dryrun_report.py` | تقرير مقارنة البوتات مع الشراء والاحتفاظ والادخار |
 | `scripts/` | إعداد، تشغيل الباك تستات، فحص look-ahead، وتلخيص النتايج |
 | `reports/` | النتايج |
 
@@ -35,14 +39,20 @@ scripts/freqai_run.sh --fresh   # FreqAI walk-forward (~4 دقايق على 4 أ
 تقسيم الوقت ثابت: **تطوير** 2022–2024، **اختبار (holdout)** من 1 يناير 2025 لـ 25 سبتمبر 2026.
 فترة الاختبار اتشافت خلاص، فأي تعديل جديد على الاستراتيجيات محتاج فترة اختبار جديدة (مثلاً dry-run لايف).
 
-### Dry-run لايف على Bybit (على جهازك أو VPS مش في أمريكا)
+### Dry-run لايف على Bybit (تداول ورقي، على جهازك أو VPS مش في أمريكا)
+
+**الدليل خطوة بخطوة (ويندوز بـ Docker Desktop أو سيرفر Hetzner):** [`docs/dry-run-guide.md`](docs/dry-run-guide.md)
 
 ```bash
-.venv/bin/freqtrade trade -c config/config.bybit.dryrun.json -s RsiMeanReversionBaseline
+# غيّر الباسوردات CHANGE-ME في config/config.dryrun.*.json الأول
+docker compose up -d              # 3 بوتات: RSI (:8081) و EMA (:8082) و FreqAI (:8083)
+docker compose run --rm report    # تقرير المقارنة الأسبوعي -> user_data/dryrun_report.md
+docker compose down
 ```
 
-ده بيستخدم أسعار Bybit الحقيقية بمحفظة وهمية 100 USDT، ومش محتاج API key.
-`config/config.freqai.json` مبني على إعدادات الباك تست (OKX)، فتشغيل FreqAI لايف على Bybit محتاج config خاص بيه (لسه ما اتعملش).
+أسعار Bybit الحقيقية، محفظة وهمية 100 USDT لكل بوت، ومش محتاج API key.
+الإعدادات: `config/config.bybit.dryrun.json` (المشترك) + ملف لكل بوت `config/config.dryrun.{rsi,ema,freqai}.json`.
+إعدادات FreqAI المشتركة بين الباك تست والـ dry-run في `config/freqai.common.json`.
 
 ## ملاحظات
 
