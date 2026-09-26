@@ -1,0 +1,264 @@
+{
+  "groups": {
+    "dev": {
+      "start": "2022-01-17 16:00:00+00:00",
+      "end": "2025-01-01 00:00:00+00:00",
+      "rows": [
+        {
+          "strategy": "DonchianBreakoutBaseline",
+          "fee": 0.001,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/dev_fee0.001/backtest-result-2026-09-26_21-39-35.zip",
+          "trades": 467,
+          "total": 0.28393573740000005,
+          "cagr": 0.08822226864255,
+          "dd_mtm": 0.3665464682076209,
+          "dd_closed": 0.3413874770999999,
+          "winrate": 0.3511777301927195,
+          "pf": 1.1056203931290165,
+          "avg_trade": 0.0024888636292149375,
+          "final": 128.39357374,
+          "start": "2022-01-17 16:00:00",
+          "end": "2025-01-01 00:00:00",
+          "days": 1079
+        },
+        {
+          "strategy": "EmaCrossBaseline",
+          "fee": 0.001,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/dev_fee0.001/backtest-result-2026-09-26_21-39-35.zip",
+          "trades": 404,
+          "total": 2.7634210288,
+          "cagr": 0.5656906363332779,
+          "dd_mtm": 0.2387899931404189,
+          "dd_closed": 0.1912781521393647,
+          "winrate": 0.33910891089108913,
+          "pf": 1.7076561705750404,
+          "avg_trade": 0.011458131203525936,
+          "final": 376.3421028800001,
+          "start": "2022-01-17 16:00:00",
+          "end": "2025-01-01 00:00:00",
+          "days": 1079
+        },
+        {
+          "strategy": "RsiMeanReversionBaseline",
+          "fee": 0.001,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/dev_fee0.001/backtest-result-2026-09-26_21-39-35.zip",
+          "trades": 77,
+          "total": -0.24600116740000005,
+          "cagr": -0.09109724534867136,
+          "dd_mtm": 0.26033832153971426,
+          "dd_closed": 0.25766309467269927,
+          "winrate": 0.5714285714285714,
+          "pf": 0.5706666430197026,
+          "avg_trade": -0.01049564562744108,
+          "final": 75.39988326,
+          "start": "2022-01-17 16:00:00",
+          "end": "2025-01-01 00:00:00",
+          "days": 1079
+        },
+        {
+          "strategy": "DonchianBreakoutBaseline",
+          "fee": 0.002,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/dev_fee0.002/backtest-result-2026-09-26_21-39-47.zip",
+          "trades": 467,
+          "total": -0.054829804599999823,
+          "cagr": -0.01889469842184921,
+          "dd_mtm": 0.41207491224110737,
+          "dd_closed": 0.4007410701,
+          "winrate": 0.3340471092077088,
+          "pf": 0.9778311668785926,
+          "avg_trade": 0.00048588487935730666,
+          "final": 94.51701954,
+          "start": "2022-01-17 16:00:00",
+          "end": "2025-01-01 00:00:00",
+          "days": 1079
+        },
+        {
+          "strategy": "EmaCrossBaseline",
+          "fee": 0.002,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/dev_fee0.002/backtest-result-2026-09-26_21-39-47.zip",
+          "trades": 404,
+          "total": 1.8901926914,
+          "cagr": 0.4319259426550474,
+          "dd_mtm": 0.2906261872535139,
+          "dd_closed": 0.24271353793102565,
+          "winrate": 0.32673267326732675,
+          "pf": 1.5188783325886874,
+          "avg_trade": 0.009437231798519055,
+          "final": 289.0192691399999,
+          "start": "2022-01-17 16:00:00",
+          "end": "2025-01-01 00:00:00",
+          "days": 1079
+        },
+        {
+          "strategy": "RsiMeanReversionBaseline",
+          "fee": 0.002,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/dev_fee0.002/backtest-result-2026-09-26_21-39-47.zip",
+          "trades": 77,
+          "total": -0.2834583533,
+          "cagr": -0.1066294615923502,
+          "dd_mtm": 0.28583390481464016,
+          "dd_closed": 0.2834583533,
+          "winrate": 0.5324675324675324,
+          "pf": 0.5096726634356201,
+          "avg_trade": -0.01247268125621729,
+          "final": 71.65416467,
+          "start": "2022-01-17 16:00:00",
+          "end": "2025-01-01 00:00:00",
+          "days": 1079
+        }
+      ],
+      "buy_and_hold": {
+        "0.001": {
+          "total": 0.5189778412546397,
+          "cagr": 0.15196056540690162,
+          "max_dd": 0.7538471336361556,
+          "per_asset": {
+            "BTC/USDT": 1.203293223559215,
+            "ETH/USDT": 0.03095894896499729,
+            "SOL/USDT": 0.3318089073383521
+          }
+        },
+        "0.002": {
+          "total": 0.5159383665958113,
+          "cagr": 0.15118000407901455,
+          "max_dd": 0.7538471336361556,
+          "per_asset": {
+            "BTC/USDT": 1.203293223559215,
+            "ETH/USDT": 0.03095894896499729,
+            "SOL/USDT": 0.3318089073383521
+          }
+        }
+      }
+    },
+    "eval": {
+      "start": "2025-01-01 00:00:00+00:00",
+      "end": "2026-09-26 00:00:00+00:00",
+      "rows": [
+        {
+          "strategy": "DonchianBreakoutBaseline",
+          "fee": 0.001,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/eval_fee0.001/backtest-result-2026-09-26_21-39-56.zip",
+          "trades": 290,
+          "total": -0.25526632810000005,
+          "cagr": -0.1562897913402359,
+          "dd_mtm": 0.4813000148849655,
+          "dd_closed": 0.4391254516288813,
+          "winrate": 0.30344827586206896,
+          "pf": 0.8138732623246338,
+          "avg_trade": -0.0022881528621391286,
+          "final": 74.47336719000003,
+          "start": "2025-01-01 00:00:00",
+          "end": "2026-09-26 00:00:00",
+          "days": 633
+        },
+        {
+          "strategy": "EmaCrossBaseline",
+          "fee": 0.001,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/eval_fee0.001/backtest-result-2026-09-26_21-39-56.zip",
+          "trades": 272,
+          "total": -0.26262492620000005,
+          "cagr": -0.16110692041981,
+          "dd_mtm": 0.40330517309134495,
+          "dd_closed": 0.36758393688975943,
+          "winrate": 0.27205882352941174,
+          "pf": 0.7981142166115174,
+          "avg_trade": -0.002726948028164186,
+          "final": 73.73750738,
+          "start": "2025-01-01 00:00:00",
+          "end": "2026-09-26 00:00:00",
+          "days": 633
+        },
+        {
+          "strategy": "RsiMeanReversionBaseline",
+          "fee": 0.001,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/eval_fee0.001/backtest-result-2026-09-26_21-39-56.zip",
+          "trades": 46,
+          "total": 0.0249984137,
+          "cagr": 0.014339177633272191,
+          "dd_mtm": 0.08405458652243654,
+          "dd_closed": 0.06826595454836042,
+          "winrate": 0.6956521739130435,
+          "pf": 1.1650595364609608,
+          "avg_trade": 0.0017778803281670082,
+          "final": 102.49984137,
+          "start": "2025-01-01 00:00:00",
+          "end": "2026-09-26 00:00:00",
+          "days": 633
+        },
+        {
+          "strategy": "DonchianBreakoutBaseline",
+          "fee": 0.002,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/eval_fee0.002/backtest-result-2026-09-26_21-40-06.zip",
+          "trades": 290,
+          "total": -0.3845687593000001,
+          "cagr": -0.24414783990667632,
+          "dd_mtm": 0.5636365256990953,
+          "dd_closed": 0.5262217321963982,
+          "winrate": 0.2896551724137931,
+          "pf": 0.7188148394018217,
+          "avg_trade": -0.0042815871120228674,
+          "final": 61.54312406999999,
+          "start": "2025-01-01 00:00:00",
+          "end": "2026-09-26 00:00:00",
+          "days": 633
+        },
+        {
+          "strategy": "EmaCrossBaseline",
+          "fee": 0.002,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/eval_fee0.002/backtest-result-2026-09-26_21-40-06.zip",
+          "trades": 272,
+          "total": -0.3834482225,
+          "cagr": -0.24335459860237563,
+          "dd_mtm": 0.454881781662374,
+          "dd_closed": 0.4353585037043163,
+          "winrate": 0.2536764705882353,
+          "pf": 0.7067198023399938,
+          "avg_trade": -0.004719505561860934,
+          "final": 61.655177750000014,
+          "start": "2025-01-01 00:00:00",
+          "end": "2026-09-26 00:00:00",
+          "days": 633
+        },
+        {
+          "strategy": "RsiMeanReversionBaseline",
+          "fee": 0.002,
+          "source": "/home/user/Our-Bank/user_data/backtest_results/baselines/eval_fee0.002/backtest-result-2026-09-26_21-40-06.zip",
+          "trades": 46,
+          "total": -0.005663061599999992,
+          "cagr": -0.0032693556678198288,
+          "dd_mtm": 0.09367424327574202,
+          "dd_closed": 0.07683429604451646,
+          "winrate": 0.6739130434782609,
+          "pf": 0.9644417958904182,
+          "avg_trade": -0.0002236778805481808,
+          "final": 99.43369384,
+          "start": "2025-01-01 00:00:00",
+          "end": "2026-09-26 00:00:00",
+          "days": 633
+        }
+      ],
+      "buy_and_hold": {
+        "0.001": {
+          "total": -0.2180815564289691,
+          "cagr": -0.13233387597739743,
+          "max_dd": 0.6458585338989922,
+          "per_asset": {
+            "BTC/USDT": -0.10136239782016354,
+            "ETH/USDT": -0.19344042236344938,
+            "SOL/USDT": -0.3547432917811113
+          }
+        },
+        "0.002": {
+          "total": -0.21964617523377106,
+          "cagr": -0.13333611237968723,
+          "max_dd": 0.6458585338989922,
+          "per_asset": {
+            "BTC/USDT": -0.10136239782016354,
+            "ETH/USDT": -0.19344042236344938,
+            "SOL/USDT": -0.3547432917811113
+          }
+        }
+      }
+    }
+  }
+}
