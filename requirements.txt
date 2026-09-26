@@ -1,0 +1,3 @@
+freqtrade[freqai]==2026.8
+# joblib 1.6.0 breaks FreqAI imports in freqtrade 2026.8
+joblib==1.5.3

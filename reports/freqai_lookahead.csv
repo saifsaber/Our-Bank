@@ -1,0 +1,2 @@
+filename,strategy,has_bias,total_signals,biased_entry_signals,biased_exit_signals,biased_indicators
+FreqAIStrategy.py,FreqAIStrategy,True,10,0,0,"&-fwd_ret,&-fwd_ret_mean,&-fwd_ret_std,do_predict,enter_tag,enter_long,exit_tag,exit_long"
